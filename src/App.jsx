@@ -1,81 +1,32 @@
-import { useState, useEffect } from 'react'
-import { getHoldings, addHolding, updateHolding, deleteHolding } from './utils/storage'
-import { fetchPrices } from './utils/prices'
-import AddHoldingForm from './components/AddHoldingForm'
-import HoldingsTable from './components/HoldingsTable'
-import SummaryCard from './components/SummaryCard'
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
+import Portfolio from './pages/Portfolio'
+import Reports from './pages/Reports'
 
-function App() {
-  const [holdings, setHoldings] = useState([])
-  const [editingHolding, setEditingHolding] = useState(null)
-  const [prices, setPrices] = useState({})
-  const [pricesLoading, setPricesLoading] = useState(false)
-  const [pricesError, setPricesError] = useState(null)
-
-  useEffect(() => {
-    setHoldings(getHoldings())
-  }, [])
-
-  useEffect(() => {
-    const coinIds = [...new Set(holdings.map(h => h.coinId))]
-    if (coinIds.length === 0) {
-      setPrices({})
-      return
-    }
-    setPricesLoading(true)
-    setPricesError(null)
-    fetchPrices(coinIds)
-      .then(data => {
-        setPrices(data)
-        setPricesLoading(false)
-      })
-      .catch(() => {
-        setPricesError('Could not load live prices. Check your connection and try again.')
-        setPricesLoading(false)
-      })
-  }, [holdings])
-
-  function handleAdd(holding) {
-    setHoldings(addHolding(holding))
-  }
-
-  function handleUpdate(id, changes) {
-    setHoldings(updateHolding(id, changes))
-    setEditingHolding(null)
-  }
-
-  function handleDelete(id) {
-    setHoldings(deleteHolding(id))
-  }
+export default function App() {
+  const navClass = ({ isActive }) =>
+    `px-3 py-1.5 rounded-md text-sm transition-colors ${
+      isActive ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'
+    }`
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="border-b border-gray-800 px-6 py-4">
-        <h1 className="text-xl font-semibold tracking-tight">Crypto Portfolio</h1>
-      </header>
-      <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
-        {holdings.length > 0 && (
-          <SummaryCard holdings={holdings} prices={prices} />
-        )}
-        <AddHoldingForm
-          editingHolding={editingHolding}
-          onAdd={handleAdd}
-          onUpdate={handleUpdate}
-          onCancelEdit={() => setEditingHolding(null)}
-        />
-        {pricesError && (
-          <p className="text-sm text-red-400">{pricesError}</p>
-        )}
-        <HoldingsTable
-          holdings={holdings}
-          prices={prices}
-          pricesLoading={pricesLoading}
-          onEdit={setEditingHolding}
-          onDelete={handleDelete}
-        />
-      </main>
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-950 text-white">
+        <header className="border-b border-gray-800 px-6 py-4">
+          <div className="mx-auto flex max-w-5xl items-center justify-between">
+            <h1 className="text-xl font-semibold tracking-tight">Crypto Portfolio</h1>
+            <nav className="flex gap-1">
+              <NavLink to="/" end className={navClass}>Portfolio</NavLink>
+              <NavLink to="/reports" className={navClass}>Reports</NavLink>
+            </nav>
+          </div>
+        </header>
+        <main className="mx-auto max-w-5xl px-6 py-8">
+          <Routes>
+            <Route path="/" element={<Portfolio />} />
+            <Route path="/reports" element={<Reports />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   )
 }
-
-export default App
